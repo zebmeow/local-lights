@@ -1,0 +1,25 @@
+{
+  "ready": true,
+  "pairing": false,
+  "pairing_mode": false,
+  "rebooting": false,
+  "confirmed": 1,
+  "failed": 0,
+  "message": "Light updated",
+  "free_heap": 106516,
+  "minimum_heap": 52760,
+  "largest_block": 30720,
+  "in_flight": 0,
+  "bulbs": [
+    {
+      "id": 1,
+      "endpoint": 1,
+      "name": "Cync bulb 1"
+    },
+    {
+      "id": 2,
+      "endpoint": 1,
+      "name": "bulb2"
+    }
+  ]
+}

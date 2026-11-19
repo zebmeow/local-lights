@@ -1,0 +1,32 @@
+{
+  "status": {
+    "ready": true,
+    "pairing": false,
+    "pairing_mode": false,
+    "rebooting": false,
+    "confirmed": 0,
+    "failed": 0,
+    "message": "Ready to pair and control bulbs",
+    "free_heap": 106176,
+    "minimum_heap": 57580,
+    "largest_block": 29696,
+    "in_flight": 0,
+    "bulbs": [
+      {
+        "id": 1,
+        "endpoint": 1,
+        "flicker": false,
+        "name": "Cync bulb 1"
+      },
+      {
+        "id": 2,
+        "endpoint": 1,
+        "flicker": false,
+        "name": "Top Light"
+      }
+    ]
+  },
+  "persistence": "PASS",
+  "validation": "PASS",
+  "sustained_test": "Interrupted by manual control; not completed"
+}

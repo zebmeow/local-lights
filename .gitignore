@@ -1,0 +1,13 @@
+backups/
+pairing.json
+esp-idf/
+esp-matter/
+tools/
+*.log
+firmware/build/
+firmware/managed_components/
+firmware/sdkconfig
+firmware/sdkconfig.old
+.venv-test/
+__pycache__/
+.DS_Store

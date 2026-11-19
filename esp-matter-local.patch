@@ -1,0 +1,81 @@
+diff --git a/components/esp_matter_controller/commands/esp_matter_controller_cluster_command.cpp b/components/esp_matter_controller/commands/esp_matter_controller_cluster_command.cpp
+index e72556d..2bc81fe 100644
+--- a/components/esp_matter_controller/commands/esp_matter_controller_cluster_command.cpp
++++ b/components/esp_matter_controller/commands/esp_matter_controller_cluster_command.cpp
+@@ -149,8 +149,9 @@ void cluster_command::on_device_connected_fcn(void *context, ExchangeManager &ex
+     chip::OperationalDeviceProxy device_proxy(&exchangeMgr, sessionHandle);
+     chip::app::CommandPathParams command_path = {cmd->m_endpoint_id, 0, cmd->m_cluster_id, cmd->m_command_id,
+                                                  chip::app::CommandPathFlags::kEndpointIdValid};
+-    interaction::invoke::send_request(context, &device_proxy, command_path, cmd->m_command_data_field,
++    esp_err_t result = interaction::invoke::send_request(context, &device_proxy, command_path, cmd->m_command_data_field,
+                                       cmd->on_success_cb, cmd->on_error_cb, cmd->m_timed_invoke_timeout_ms);
++    if (result != ESP_OK && cmd->on_error_cb) cmd->on_error_cb(nullptr, CHIP_ERROR_INTERNAL);
+     chip::Platform::Delete(cmd);
+     return;
+ }
+@@ -158,6 +159,7 @@ void cluster_command::on_device_connected_fcn(void *context, ExchangeManager &ex
+ void cluster_command::on_device_connection_failure_fcn(void *context, const ScopedNodeId &peerId, CHIP_ERROR error)
+ {
+     cluster_command *cmd = reinterpret_cast<cluster_command *>(context);
++    if (cmd->on_error_cb) cmd->on_error_cb(nullptr, error);
+     chip::Platform::Delete(cmd);
+     return;
+ }
+diff --git a/components/esp_matter_controller/commands/esp_matter_controller_pairing_command.cpp b/components/esp_matter_controller/commands/esp_matter_controller_pairing_command.cpp
+index 4b111ac..641dbc5 100644
+--- a/components/esp_matter_controller/commands/esp_matter_controller_pairing_command.cpp
++++ b/components/esp_matter_controller/commands/esp_matter_controller_pairing_command.cpp
+@@ -49,7 +49,7 @@ void pairing_command::OnCommissioningSuccess(chip::PeerId peerId)
+     if (m_callbacks.commissioning_success_callback) {
+         auto fabric = controller_instance.get_commissioner()->GetFabricTable()->FindFabricWithCompressedId(
+             peerId.GetCompressedFabricId());
+-        m_callbacks.commissioning_success_callback(ScopedNodeId(fabric->GetFabricIndex(), peerId.GetNodeId()));
++        m_callbacks.commissioning_success_callback(ScopedNodeId(peerId.GetNodeId(), fabric ? fabric->GetFabricIndex() : chip::kUndefinedFabricIndex));
+     }
+ }
+ 
+@@ -65,7 +65,7 @@ void pairing_command::OnCommissioningFailure(
+         auto fabric = controller_instance.get_commissioner()->GetFabricTable()->FindFabricWithCompressedId(
+             peerId.GetCompressedFabricId());
+         m_callbacks.commissioning_failure_callback(
+-            ScopedNodeId(fabric->GetFabricIndex(), peerId.GetNodeId()), error, stageFailed,
++            ScopedNodeId(peerId.GetNodeId(), fabric ? fabric->GetFabricIndex() : chip::kUndefinedFabricIndex), error, stageFailed,
+             additionalErrorInfo.HasValue() ? std::make_optional(additionalErrorInfo.Value()) : std::nullopt);
+     }
+ }
+@@ -154,9 +154,8 @@ esp_err_t pairing_code_thread(NodeId nodeId, const char *payload, uint8_t *datas
+     CommissioningParameters commissioning_params = CommissioningParameters().SetThreadOperationalDataset(dataset_span);
+     auto &controller_instance = esp_matter::controller::matter_controller_client::get_instance();
+     controller_instance.get_commissioner()->RegisterPairingDelegate(&pairing_command::get_instance());
+-    controller_instance.get_commissioner()->PairDevice(nodeId, payload, commissioning_params, DiscoveryType::kAll);
+-
+-    return ESP_OK;
++    CHIP_ERROR err = controller_instance.get_commissioner()->PairDevice(nodeId, payload, commissioning_params, DiscoveryType::kAll);
++    return err == CHIP_NO_ERROR ? ESP_OK : ESP_FAIL;
+ }
+ 
+ esp_err_t pairing_code_wifi(NodeId nodeId, const char *ssid, const char *password, const char *payload)
+@@ -168,9 +167,8 @@ esp_err_t pairing_code_wifi(NodeId nodeId, const char *ssid, const char *passwor
+         CommissioningParameters().SetWiFiCredentials(Controller::WiFiCredentials(nameSpan, pwdSpan));
+     auto &controller_instance = esp_matter::controller::matter_controller_client::get_instance();
+     controller_instance.get_commissioner()->RegisterPairingDelegate(&pairing_command::get_instance());
+-    controller_instance.get_commissioner()->PairDevice(nodeId, payload, commissioning_params, DiscoveryType::kAll);
+-
+-    return ESP_OK;
++    CHIP_ERROR err = controller_instance.get_commissioner()->PairDevice(nodeId, payload, commissioning_params, DiscoveryType::kAll);
++    return err == CHIP_NO_ERROR ? ESP_OK : ESP_FAIL;
+ }
+ 
+ esp_err_t pairing_code_wifi_thread(NodeId nodeId, const char *ssid, const char *password, const char *payload,
+@@ -186,9 +184,8 @@ esp_err_t pairing_code_wifi_thread(NodeId nodeId, const char *ssid, const char *
+             .SetThreadOperationalDataset(dataset_span);
+     auto &controller_instance = esp_matter::controller::matter_controller_client::get_instance();
+     controller_instance.get_commissioner()->RegisterPairingDelegate(&pairing_command::get_instance());
+-    controller_instance.get_commissioner()->PairDevice(nodeId, payload, commissioning_params, DiscoveryType::kAll);
+-
+-    return ESP_OK;
++    CHIP_ERROR err = controller_instance.get_commissioner()->PairDevice(nodeId, payload, commissioning_params, DiscoveryType::kAll);
++    return err == CHIP_NO_ERROR ? ESP_OK : ESP_FAIL;
+ }
+ 
+ } // namespace controller
