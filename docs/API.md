@@ -30,13 +30,13 @@ One command to one bulb.
 | `power` | `0` or `1` | On/Off |
 | `brightness` | `1` to `100` | Level Control |
 | `temperature` | `2000` to `6500` (kelvin) | Color Control |
+| `hue` | `0` to `360`, at full saturation | Color Control |
+| `color` | none; send `hue` (`0` to `360`) and `saturation` (`0` to `100`) | Color Control |
 
 ```json
 { "id": 1, "action": "brightness", "value": 60 }
+{ "id": 1, "action": "color", "hue": 28, "saturation": 80 }
 ```
-
-Colour is set through the same endpoint; see `control()` in
-`firmware/main/local_web.cpp` for the full list of actions.
 
 ## `POST /api/settings`
 
